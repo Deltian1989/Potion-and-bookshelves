@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "potionandbookshelves:block/potion_shelf"
+    }
+  }
+}
