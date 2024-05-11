@@ -23,7 +23,7 @@ public class PotionAndBookshelves
 {
     public static final String MOD_ID = "potionandbookshelves";
 
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public PotionAndBookshelves()
     {
