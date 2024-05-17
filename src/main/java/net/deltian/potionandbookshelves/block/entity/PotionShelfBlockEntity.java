@@ -1,9 +1,12 @@
 package net.deltian.potionandbookshelves.block.entity;
 
+import net.deltian.potionandbookshelves.PotionAndBookshelves;
+import net.deltian.potionandbookshelves.inventory.ModMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.*;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -22,6 +25,16 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
 
     public PotionShelfBlockEntity(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntityTypes.IRON_CHEST.get(),pPos, pBlockState);
+    }
+
+    private Component getDefaultName() {
+        return new TranslatableComponent(PotionAndBookshelves.MOD_ID + ".container.potion_shelf");
+    }
+
+    @javax.annotation.Nullable
+    @Override
+    public Component getCustomName() {
+        return this.name;
     }
 
     @Override
@@ -48,6 +61,12 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
     @Override
     public int getContainerSize() {
         return 12;
+    }
+
+    @Override
+    public Component getName()
+    {
+        return this.name != null ? this.name : this.getDefaultName();
     }
 
     @Override
@@ -101,23 +120,18 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
             this.items.clear();
     }
 
-    @Override
-    public Component getName() {
-        return this.name;
-    }
-
     public void setCustomName(Component pName) {
         this.name = pName;
     }
 
     @Override
     public Component getDisplayName() {
-        return this.name;
+        return this.getName();
     }
 
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-        return null;
+        return ModMenu.createPotionShelfContainer(pContainerId, pPlayerInventory, this);
     }
 }

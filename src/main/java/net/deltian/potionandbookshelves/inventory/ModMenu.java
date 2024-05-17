@@ -14,6 +14,10 @@ public class ModMenu extends AbstractContainerMenu {
     private final Container container;
 
     private ModMenu(@Nullable MenuType<?> menuType, int containerId, Inventory playerInventory) {
+        this(menuType, containerId, playerInventory, new SimpleContainer(12));
+    }
+
+    protected ModMenu(@Nullable MenuType<?> menuType, int containerId, Inventory playerInventory, Container inventory){
         super(menuType, containerId);
 
         this.container = new SimpleContainer(12);
@@ -21,8 +25,12 @@ public class ModMenu extends AbstractContainerMenu {
         this.container.startOpen(playerInventory.player);
     }
 
+    public static ModMenu createPotionShelfContainer(int containerId, Inventory playerInventory) {
+        return new ModMenu(ModContainerTypes.POTION_SHELF.get(), containerId, playerInventory);
+    }
+
     public static ModMenu createPotionShelfContainer(int containerId, Inventory playerInventory, Container inventory) {
-        return new ModMenu(null, containerId, playerInventory);
+        return new ModMenu(ModContainerTypes.POTION_SHELF.get(), containerId, playerInventory, inventory);
     }
 
     @Override

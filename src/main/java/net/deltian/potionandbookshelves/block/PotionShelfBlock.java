@@ -4,24 +4,30 @@ import net.deltian.potionandbookshelves.PotionAndBookshelves;
 import net.deltian.potionandbookshelves.block.entity.PotionShelfBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
-public class PotionShelf extends HorizontalDirectionalBlock {
+public class PotionShelfBlock extends BaseEntityBlock {
 
-    public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+    public static final DirectionProperty FACING =  HorizontalDirectionalBlock.FACING;
 
     protected static final VoxelShape NORTH_AABB = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 8.0D);
 
@@ -33,10 +39,27 @@ public class PotionShelf extends HorizontalDirectionalBlock {
 
     protected final Supplier<BlockEntityType<? extends PotionShelfBlockEntity>> blockEntityType;
 
-    public PotionShelf(Properties pProperties, Supplier<BlockEntityType<? extends PotionShelfBlockEntity>> blockEntityType) {
+    public PotionShelfBlock(Properties pProperties, Supplier<BlockEntityType<? extends PotionShelfBlockEntity>> blockEntityType) {
         super(pProperties);
 
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
         this.blockEntityType = blockEntityType;
+    }
+
+    @Override
+    @Deprecated
+    public InteractionResult use(BlockState blockState, Level level, BlockPos blockPos, Player player, InteractionHand interactionHand, BlockHitResult blockHitResult) {
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        } else {
+            MenuProvider menuProvider = this.getMenuProvider(blockState, level, blockPos);
+
+            if (menuProvider != null) {
+                player.openMenu(menuProvider);
+            }
+
+            return InteractionResult.CONSUME;
+        }
     }
 
     @Override
@@ -61,6 +84,11 @@ public class PotionShelf extends HorizontalDirectionalBlock {
 
     }
 
+    @Override
+    public RenderShape getRenderShape(BlockState pState) {
+        return RenderShape.MODEL;
+    }
+
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
@@ -73,7 +101,18 @@ public class PotionShelf extends HorizontalDirectionalBlock {
     }
 
     @Override
-    public boolean skipRendering(BlockState pState, BlockState pAdjacentBlockState, Direction pSide) {
-        return super.skipRendering(pState, pAdjacentBlockState, pSide);
+    public BlockState rotate(BlockState pState, Rotation pRot) {
+        return pState.setValue(FACING, pRot.rotate(pState.getValue(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState pState, Mirror pMirror) {
+        return pState.rotate(pMirror.getRotation(pState.getValue(FACING)));
+    }
+
+    @Nullable
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
+        return new PotionShelfBlockEntity(pPos, pState);
     }
 }
