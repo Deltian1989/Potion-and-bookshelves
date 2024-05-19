@@ -51,6 +51,7 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
 
     @Override
     protected void saveAdditional(CompoundTag compoundTag) {
+        super.saveAdditional(compoundTag);
         if (this.name != null) {
             compoundTag.putString("CustomName", Component.Serializer.toJson(this.name));
         }
@@ -97,13 +98,10 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
     @Override
     public void setItem(int index, ItemStack stack) {
         if (stack.getItem() instanceof PotionItem){
-
-            if (items.get(index).isEmpty()){
-                this.items.set(index, stack);
-
-                this.setChanged();
-            }
+            this.items.set(index, stack);
         }
+
+        this.setChanged();
     }
 
     @Override
@@ -118,10 +116,6 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
     @Override
     public void clearContent() {
             this.items.clear();
-    }
-
-    public void setCustomName(Component pName) {
-        this.name = pName;
     }
 
     @Override
