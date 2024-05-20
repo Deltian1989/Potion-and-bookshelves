@@ -2,11 +2,14 @@ package net.deltian.potionandbookshelves.block.entity;
 
 import net.deltian.potionandbookshelves.PotionAndBookshelves;
 import net.deltian.potionandbookshelves.inventory.ModMenu;
+import net.deltian.potionandbookshelves.network.ModMessages;
+import net.deltian.potionandbookshelves.network.SyncItemsPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.*;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -15,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 public class PotionShelfBlockEntity extends BlockEntity implements Container, MenuProvider, Nameable {
@@ -24,7 +28,7 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
     private NonNullList<ItemStack> items = NonNullList.withSize(12, ItemStack.EMPTY);
 
     public PotionShelfBlockEntity(BlockPos pPos, BlockState pBlockState) {
-        super(ModBlockEntityTypes.IRON_CHEST.get(),pPos, pBlockState);
+        super(ModBlockEntityTypes.POTION_SHELF.get(),pPos, pBlockState);
     }
 
     private Component getDefaultName() {
@@ -80,6 +84,10 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
         return this.items.get(index);
     }
 
+    public NonNullList<ItemStack> getItems() {
+        return this.items;
+    }
+
     @Override
     public ItemStack removeItem(int index, int count) {
         ItemStack itemstack = ContainerHelper.removeItem(this.items, index, count);
@@ -97,11 +105,32 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
 
     @Override
     public void setItem(int index, ItemStack stack) {
-        if (stack.getItem() instanceof PotionItem){
+
+        PotionAndBookshelves.LOGGER.info("Item set: "+stack);
+
+        if (index >= 0 && index < this.items.size()) {
             this.items.set(index, stack);
         }
 
         this.setChanged();
+
+        if (level != null && level instanceof ServerLevel && !level.isClientSide) {
+            ModMessages.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(worldPosition)),
+                    new SyncItemsPacket(worldPosition, items));
+        }
+
+
+    }
+
+    public void setItems(NonNullList<ItemStack> items) {
+        PotionAndBookshelves.LOGGER.info("Items set.");
+        if (level != null && level instanceof ServerLevel && !level.isClientSide) {
+            ModMessages.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(worldPosition)),
+                    new SyncItemsPacket(worldPosition, items));
+        }
+
+        this.items = items;
+        setChanged(); // Mark the block entity as changed to trigger a render update
     }
 
     @Override

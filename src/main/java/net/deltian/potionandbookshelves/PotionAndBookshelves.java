@@ -4,9 +4,12 @@ import com.mojang.logging.LogUtils;
 import net.deltian.potionandbookshelves.block.ModBlocks;
 import net.deltian.potionandbookshelves.block.entity.ModBlockEntityTypes;
 import net.deltian.potionandbookshelves.client.screen.PotionShelfScreen;
+import net.deltian.potionandbookshelves.client.render.PotionShelfBlockEntityRenderer;
 import net.deltian.potionandbookshelves.inventory.ModContainerTypes;
 import net.deltian.potionandbookshelves.item.ModItems;
+import net.deltian.potionandbookshelves.network.ModMessages;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -62,6 +65,8 @@ public class PotionAndBookshelves
     @OnlyIn(Dist.CLIENT)
     private void setupClient(final FMLClientSetupEvent event) {
         MenuScreens.register(ModContainerTypes.POTION_SHELF.get(), PotionShelfScreen::new);
+        BlockEntityRenderers.register(ModBlockEntityTypes.POTION_SHELF.get(), PotionShelfBlockEntityRenderer::new);
+        ModMessages.register();
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event)

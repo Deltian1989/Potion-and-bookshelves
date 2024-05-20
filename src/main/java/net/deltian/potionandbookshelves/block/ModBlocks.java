@@ -23,7 +23,7 @@ public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, PotionAndBookshelves.MOD_ID);
 
     public static final RegistryObject<Block> POTION_SHELF = registerBlock("potion_shelf", () ->
-            new PotionShelfBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).noOcclusion().isViewBlocking(ModBlocks::never), ModBlockEntityTypes.IRON_CHEST::get), CreativeModeTab.TAB_DECORATIONS);
+            new PotionShelfBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).noOcclusion().isViewBlocking(ModBlocks::never), ModBlockEntityTypes.POTION_SHELF::get), CreativeModeTab.TAB_DECORATIONS);
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block, CreativeModeTab creativeModeTab){
         RegistryObject<T> toReturn = BLOCKS.register(name,block);

@@ -10,7 +10,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModBlockEntityTypes {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, PotionAndBookshelves.MOD_ID);
 
-    public static final RegistryObject<BlockEntityType<PotionShelfBlockEntity>> IRON_CHEST = BLOCK_ENTITIES.register(
+    public static final RegistryObject<BlockEntityType<PotionShelfBlockEntity>> POTION_SHELF = BLOCK_ENTITIES.register(
             "iron_chest", () -> BlockEntityType.Builder.of(PotionShelfBlockEntity::new, ModBlocks.POTION_SHELF.get()).build(null));
 
 }

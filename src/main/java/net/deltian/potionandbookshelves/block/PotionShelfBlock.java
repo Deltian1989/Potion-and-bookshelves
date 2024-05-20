@@ -10,6 +10,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -52,8 +53,9 @@ public class PotionShelfBlock extends BaseEntityBlock {
         } else {
             MenuProvider menuProvider = this.getMenuProvider(blockState, level, blockPos);
 
-            if (menuProvider != null) {
-                player.openMenu(menuProvider);
+            BlockEntity blockentity = level.getBlockEntity(blockPos);
+            if (blockentity instanceof PotionShelfBlockEntity) {
+                player.openMenu((PotionShelfBlockEntity) blockentity);
             }
 
             return InteractionResult.CONSUME;
