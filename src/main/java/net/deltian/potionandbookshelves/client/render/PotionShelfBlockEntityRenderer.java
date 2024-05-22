@@ -28,8 +28,18 @@ public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<Potio
                 poseStack.pushPose();
 
                 // Example position calculation: items in a grid
-                float xOffset = (i % 4) * 0.25f;
-                float yOffset = 0.85f;
+                float xOffset = ((i % 4)+1) * 0.2f;
+                float yOffset;
+
+                if (i < 4){
+                    yOffset=0.8f;
+                }
+                else if (i >= 4 && i <8){
+                    yOffset=0.46f;
+                }
+                else{
+                    yOffset=0.12f;
+                }
 
                 poseStack.translate(xOffset, yOffset, 0.25f);
                 poseStack.scale(0.5f, 0.5f, 0.5f);
