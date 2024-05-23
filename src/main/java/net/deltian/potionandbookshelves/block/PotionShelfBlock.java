@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,13 +29,17 @@ public class PotionShelfBlock extends BaseEntityBlock {
 
     public static final DirectionProperty FACING =  HorizontalDirectionalBlock.FACING;
 
-    protected static final VoxelShape NORTH_AABB = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 8.0D);
+    private static final VoxelShape SHELF1 = Block.box(1, 11.5, 0.5, 15, 12, 7);
+    private static final VoxelShape SHELF2 = Block.box(1, 6, 0.5, 15, 6.5, 7);
+    private static final VoxelShape SHELF3 = Block.box(1, 0.5, 0.5, 15, 1, 7);
+    private static final VoxelShape SIDE1 = Block.box(15, 0, 0, 16, 16, 8);
+    private static final VoxelShape SIDE2 = Block.box(0, 0, 0, 1, 16, 8);
 
-    protected static final VoxelShape SOUTH_AABB = Block.box(0.0D, 0.0D, 8.0D, 16.0D, 16.0D, 16.0D);
-
-    protected static final VoxelShape WEST_AABB = Block.box(0.0D, 0.0D, 0.0D, 8.0D, 16.0D, 16.0D);
-
-    protected static final VoxelShape EAST_AABB = Block.box(8.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D);
+    // Combine all the parts into one VoxelShape
+    private static final VoxelShape SHAPE_NORTH = Shapes.or(SHELF1, SHELF2, SHELF3, SIDE1, SIDE2);
+    private static final VoxelShape SHAPE_EAST = rotateShape(SHAPE_NORTH, Direction.EAST);
+    private static final VoxelShape SHAPE_SOUTH = rotateShape(SHAPE_NORTH, Direction.SOUTH);
+    private static final VoxelShape SHAPE_WEST = rotateShape(SHAPE_NORTH, Direction.WEST);
 
     protected final Supplier<BlockEntityType<? extends PotionShelfBlockEntity>> blockEntityType;
 
@@ -43,6 +48,38 @@ public class PotionShelfBlock extends BaseEntityBlock {
 
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
         this.blockEntityType = blockEntityType;
+    }
+
+    private static VoxelShape rotateShape(VoxelShape shape, Direction direction) {
+        switch (direction) {
+            case EAST:
+                return shapeRotateY(shape, 90);
+            case SOUTH:
+                return shapeRotateY(shape, 180);
+            case WEST:
+                return shapeRotateY(shape, 270);
+            default:
+                return shape;
+        }
+    }
+
+    private static VoxelShape shapeRotateY(VoxelShape shape, int angle) {
+        VoxelShape[] buffer = { shape, Shapes.empty() };
+
+        int rotations = angle / 90;
+        for (int i = 0; i < rotations; i++) {
+            buffer[0].forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+                double newMinX = 1.0 - maxZ;
+                double newMaxX = 1.0 - minZ;
+                double newMinZ = minX;
+                double newMaxZ = maxX;
+                buffer[1] = Shapes.or(buffer[1], Shapes.box(newMinX, minY, newMinZ, newMaxX, maxY, newMaxZ));
+            });
+            buffer[0] = buffer[1];
+            buffer[1] = Shapes.empty();
+        }
+
+        return buffer[0];
     }
 
     @Override
@@ -68,17 +105,14 @@ public class PotionShelfBlock extends BaseEntityBlock {
         Direction direction = pState.getValue(FACING);
 
         switch (direction){
-            case NORTH:
-                return NORTH_AABB;
             case SOUTH:
-                return SOUTH_AABB;
+                return SHAPE_SOUTH;
             case WEST:
-                return WEST_AABB;
+                return SHAPE_WEST;
             case EAST:
-                return EAST_AABB;
+                return SHAPE_EAST;
             default:{
-                PotionAndBookshelves.LOGGER.error("Invalid direction");
-                return NORTH_AABB;
+                return SHAPE_NORTH;
             }
         }
 
