@@ -18,9 +18,9 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +29,34 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
     private Component name;
 
     private NonNullList<ItemStack> items = NonNullList.withSize(12, ItemStack.EMPTY);
+    private static final AABB[] ITEM_HITBOXES = new AABB[12];
+
+    static {
+
+        for (int i = 0; i < 12; i++) {
+
+            float y;
+
+            if (i < 4){
+                y=0.8f;
+            }
+            else if (i >= 4 && i <8){
+                y=0.46f;
+            }
+            else{
+                y=0.12f;
+            }
+
+            float x = ((i % 4)+1) * 0.2f;
+            float z = 0.25f;
+
+            ITEM_HITBOXES[i] = new AABB(x, y, z, x + 0.125, y+0.125, z + 0.125);
+        }
+    }
+
+    public static AABB[] getItemHitboxes() {
+        return ITEM_HITBOXES;
+    }
 
     public PotionShelfBlockEntity(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntityTypes.POTION_SHELF.get(),pPos, pBlockState);
