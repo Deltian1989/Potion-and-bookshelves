@@ -2,6 +2,8 @@ package net.deltian.potionandbookshelves.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Vector3f;
+import net.deltian.potionandbookshelves.block.PotionShelfBlock;
 import net.deltian.potionandbookshelves.block.entity.PotionShelfBlockEntity;
 import net.deltian.potionandbookshelves.utils.RayTraceUtils;
 import net.minecraft.client.Minecraft;
@@ -27,6 +29,10 @@ public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<Potio
     public void render(PotionShelfBlockEntity blockEntity, float partialTicks, PoseStack poseStack, MultiBufferSource source, int light, int overlay) {
         if (blockEntity.getItems().isEmpty()) return;
 
+        var blockState = blockEntity.getBlockState();
+
+        var direction = blockState.getValue(PotionShelfBlock.FACING);
+
         // Calculate the position and render each item
         for (int i = 0; i < blockEntity.getItems().size(); i++) {
 
@@ -35,8 +41,6 @@ public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<Potio
             if (!itemStack.isEmpty()) {
                 poseStack.pushPose();
 
-                // Example position calculation: items in a grid
-                float xOffset = ((i % 4)+1) * 0.2f;
                 float yOffset;
 
                 if (i < 4){
@@ -49,8 +53,40 @@ public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<Potio
                     yOffset=0.12f;
                 }
 
-                poseStack.translate(xOffset, yOffset, 0.25f);
+                float xOffset =0;
+                float zOffset = 0;
+
+                float rotationY = 0;
+
+                switch (direction){
+                    case NORTH:{
+                        xOffset = 0.2f + (i % 4) * 0.2f;
+                        zOffset = 0.25f;
+                        break;
+                    }
+                    case SOUTH:{
+                        xOffset = 1 - (0.2f + (i % 4) * 0.2f);
+                        zOffset = 0.75f;
+                        break;
+                    }
+                    case WEST:{
+                        xOffset = 0.25f;
+                        zOffset = 1 - (0.2f + (i % 4) * 0.2f);
+                        rotationY=-90;
+                        break;
+                    }
+                    case EAST:{
+                        xOffset = 0.75f;
+                        zOffset = 0.2f + (i % 4) * 0.2f;
+                        rotationY=-90;
+                        break;
+                    }
+                }
+
+
+                poseStack.translate(xOffset, yOffset, zOffset);
                 poseStack.scale(0.5f, 0.5f, 0.5f);
+                poseStack.mulPose(Vector3f.YP.rotationDegrees(rotationY));;
                 Minecraft.getInstance().getItemRenderer().renderStatic(itemStack, ItemTransforms.TransformType.GROUND, light, overlay, poseStack, source,0);
 
                 poseStack.popPose();
@@ -70,7 +106,7 @@ public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<Potio
         BlockHitResult hitResult = (BlockHitResult)RayTraceUtils.rayTrace(mc.level, player, 5.0);
         if (hitResult.getType() == HitResult.Type.MISS) return;
 
-        if (hitResult.getBlockPos() !=blockEntity.getBlockPos()) return;
+        if (!hitResult.getBlockPos().equals(blockEntity.getBlockPos())) return;
 
         Vec3 hitVec = hitResult.getLocation();
 
@@ -86,6 +122,6 @@ public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<Potio
     private void renderHitbox(PoseStack poseStack, MultiBufferSource bufferSource, AABB hitbox) {
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.lines());
-        LevelRenderer.renderLineBox(poseStack, vertexConsumer, hitbox, 1.0f, 1.0f, 1.0f, 0.5F);
+        LevelRenderer.renderLineBox(poseStack, vertexConsumer, hitbox, 0.0F, 0.0F, 0.0F, 0.4F);
     }
 }
