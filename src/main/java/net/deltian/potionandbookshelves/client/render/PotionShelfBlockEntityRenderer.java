@@ -3,6 +3,7 @@ package net.deltian.potionandbookshelves.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Vector3f;
+import net.deltian.potionandbookshelves.PotionAndBookshelves;
 import net.deltian.potionandbookshelves.block.PotionShelfBlock;
 import net.deltian.potionandbookshelves.block.entity.PotionShelfBlockEntity;
 import net.deltian.potionandbookshelves.utils.RayTraceUtils;
@@ -10,15 +11,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.Optional;
 
 public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<PotionShelfBlockEntity> {
 
@@ -93,35 +100,62 @@ public class PotionShelfBlockEntityRenderer implements BlockEntityRenderer<Potio
             }
         }
 
-        renderItemHitbox(blockEntity, poseStack, source);
+        renderItemHitbox(blockEntity, partialTicks, poseStack, source,light, overlay, direction);
     }
 
-    private void renderItemHitbox(PotionShelfBlockEntity blockEntity, PoseStack poseStack, MultiBufferSource bufferSource) {
+    private void renderItemHitbox(PotionShelfBlockEntity blockEntity,float partialTicks,  PoseStack poseStack, MultiBufferSource bufferSource, int light, int overlay, Direction direction) {
 
         Minecraft mc = Minecraft.getInstance();
 
         Player player = mc.player;
         if (player == null) return;
 
-        BlockHitResult hitResult = (BlockHitResult)RayTraceUtils.rayTrace(mc.level, player, 5.0);
-        if (hitResult.getType() == HitResult.Type.MISS) return;
+        BlockPos blockPos = blockEntity.getBlockPos();
 
-        if (!hitResult.getBlockPos().equals(blockEntity.getBlockPos())) return;
+        Vec3 start = player.getEyePosition(partialTicks);
+        Vec3 end = start.add(player.getViewVector(partialTicks).scale(20.0D));
 
-        Vec3 hitVec = hitResult.getLocation();
+        Optional<AABB> itemHitbox = getItemHitbox(start, end,blockPos, direction);
 
-        AABB[] hitboxes = PotionShelfBlockEntity.getItemHitboxes();
-        Vec3 blockPos = Vec3.atLowerCornerOf(blockEntity.getBlockPos());
-        for (AABB hitbox : hitboxes) {
-            //if (hitbox.move(blockPos).contains(hitVec)) {
-                renderHitbox(poseStack,bufferSource,hitbox);
-            //}
+        if (itemHitbox.isPresent()) {
+            renderHitbox(poseStack, bufferSource, itemHitbox.get());
+
+            renderBlock(blockEntity,poseStack,bufferSource,light, overlay);
         }
+    }
+
+    private Optional<AABB> getItemHitbox(Vec3 start, Vec3 end, BlockPos blockPos, Direction direction) {
+        AABB[] itemHitboxes = PotionShelfBlockEntity.getItemHitboxes(direction);
+        for (AABB itemHitbox : itemHitboxes) {
+
+            var currentHitBoxPos = itemHitbox.move(blockPos);
+
+            if (currentHitBoxPos.clip(start, end).isPresent()) {
+                return Optional.of(itemHitbox);
+            }
+        }
+        return Optional.empty();
     }
 
     private void renderHitbox(PoseStack poseStack, MultiBufferSource bufferSource, AABB hitbox) {
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.lines());
         LevelRenderer.renderLineBox(poseStack, vertexConsumer, hitbox, 0.0F, 0.0F, 0.0F, 0.4F);
+    }
+
+    private void renderBlock(PotionShelfBlockEntity blockEntity, PoseStack poseStack, MultiBufferSource bufferSource, int combinedLight, int combinedOverlay) {
+        BlockPos blockPos = blockEntity.getBlockPos();
+        BlockState blockState = blockEntity.getBlockState();
+
+        BlockRenderDispatcher blockRenderDispatcher = Minecraft.getInstance().getBlockRenderer();
+        poseStack.pushPose();
+
+        // Apply translation and rotation based on block position and state
+        poseStack.translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+
+        // Render the block model
+        blockRenderDispatcher.renderSingleBlock(blockState, poseStack, bufferSource, combinedLight, combinedOverlay);
+
+        poseStack.popPose();
     }
 }

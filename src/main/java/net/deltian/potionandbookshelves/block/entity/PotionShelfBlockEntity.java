@@ -5,6 +5,7 @@ import net.deltian.potionandbookshelves.inventory.ModMenu;
 import net.deltian.potionandbookshelves.network.ModMessages;
 import net.deltian.potionandbookshelves.network.SyncItemsPacket;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -24,14 +25,30 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.*;
+
 public class PotionShelfBlockEntity extends BlockEntity implements Container, MenuProvider, Nameable {
 
     private Component name;
 
     private NonNullList<ItemStack> items = NonNullList.withSize(12, ItemStack.EMPTY);
-    private static final AABB[] ITEM_HITBOXES = new AABB[12];
+    private static final Map<Direction, AABB[]> ITEM_HITBOXES_MAP;
 
     static {
+
+        ITEM_HITBOXES_MAP=new HashMap<>();
+
+        createHitboxesForNorthDirection();
+
+        createHitboxesForSouthDirection();
+
+        createHitboxesForWestDirection();
+
+        createHitboxesForEastDirection();
+    }
+
+    private static void createHitboxesForNorthDirection() {
+        AABB[] item_hitboxes = new AABB[12];
 
         for (int i = 0; i < 12; i++) {
 
@@ -47,15 +64,103 @@ public class PotionShelfBlockEntity extends BlockEntity implements Container, Me
                 y=0.12f;
             }
 
-            float x = ((i % 4)+1) * 0.2f;
-            float z = 0.25f;
+            y-=0.05f;
 
-            ITEM_HITBOXES[i] = new AABB(x, y, z, x + 0.125, y+0.125, z + 0.125);
+            float x = ((i % 4)+1) * 0.2f-0.0625f;
+            float z = 0.25f-0.03125f;
+
+            item_hitboxes[i] = new AABB(x, y, z, x + 0.14f, y+0.21f, z + 0.0625f);
         }
+
+        ITEM_HITBOXES_MAP.put(Direction.NORTH,item_hitboxes);
     }
 
-    public static AABB[] getItemHitboxes() {
-        return ITEM_HITBOXES;
+    private static void createHitboxesForSouthDirection() {
+        AABB[] item_hitboxes = new AABB[12];
+
+        for (int i = 0; i < 12; i++) {
+
+            float y;
+
+            if (i < 4){
+                y=0.8f;
+            }
+            else if (i >= 4 && i <8){
+                y=0.46f;
+            }
+            else{
+                y=0.12f;
+            }
+
+            y-=0.05f;
+
+            float x = 1-(((i % 4)+1) * 0.2f-0.0625f -0.015f);
+            float z =  0.75f-0.03125f;
+
+            item_hitboxes[i] = new AABB(x - 0.14f, y+0.21f, z + 0.0625f,x, y, z);
+        }
+
+        ITEM_HITBOXES_MAP.put(Direction.SOUTH,item_hitboxes);
+    }
+
+    private static void createHitboxesForWestDirection() {
+        AABB[] item_hitboxes = new AABB[12];
+
+        for (int i = 0; i < 12; i++) {
+
+            float y;
+
+            if (i < 4){
+                y=0.8f;
+            }
+            else if (i >= 4 && i <8){
+                y=0.46f;
+            }
+            else{
+                y=0.12f;
+            }
+
+            y-=0.05f;
+
+            float x = 1-(((i % 4)+1) * 0.2f-0.0625f -0.015f);
+            float z =  0.75f-0.03125f;
+
+            item_hitboxes[i] = new AABB(x - 0.14f, y+0.21f, z + 0.0625f,x, y, z);
+        }
+
+        ITEM_HITBOXES_MAP.put(Direction.WEST,item_hitboxes);
+    }
+
+    private static void createHitboxesForEastDirection() {
+        AABB[] item_hitboxes = new AABB[12];
+
+        for (int i = 0; i < 12; i++) {
+
+            float y;
+
+            if (i < 4){
+                y=0.8f;
+            }
+            else if (i >= 4 && i <8){
+                y=0.46f;
+            }
+            else{
+                y=0.12f;
+            }
+
+            y-=0.05f;
+
+            float x = 1-(((i % 4)+1) * 0.2f-0.0625f -0.015f);
+            float z =  0.75f-0.03125f;
+
+            item_hitboxes[i] = new AABB(x - 0.14f, y+0.21f, z + 0.0625f,x, y, z);
+        }
+
+        ITEM_HITBOXES_MAP.put(Direction.EAST,item_hitboxes);
+    }
+
+    public static AABB[] getItemHitboxes(Direction direction) {
+        return ITEM_HITBOXES_MAP.get(direction);
     }
 
     public PotionShelfBlockEntity(BlockPos pPos, BlockState pBlockState) {
